@@ -725,7 +725,7 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Ảnh trong album (Tối đa 10 ảnh) *</label>
+          <label class="form-label">Ảnh trong album (Khuyên dùng tối đa 6 ảnh) *</label>
           <div class="dropzone" onclick="document.getElementById('photos-input').click()">
             <i class="fa-solid fa-cloud-arrow-up"></i>
             <p>Nhấp để chọn ảnh từ điện thoại/máy tính</p>
@@ -768,13 +768,11 @@
       measurementId: "G-BSZ19J28GR"
     };
 
-    // Khởi tạo Firebase
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.firestore();
 
-    // NGÀY SINH BÉ KEM: 17/09/2025
     const BABY_BIRTHDAY = new Date('2025-09-17');
     
     let albums = JSON.parse(localStorage.getItem('kem_albums')) || [];
@@ -784,8 +782,8 @@
     let activeLightboxIndex = 0;
     let currentTab = 'albums';
 
-    // HÀM TỰ ĐỘNG NÉN ẢNH ĐIỆN THOẠI TRƯỚC KHU UPLOAD
-    function compressImage(file, maxWidth = 1000, quality = 0.7) {
+    // BỘ NÉN ẢNH SIÊU TỐC ĐỘ ĐẢM BẢO KHÔNG VƯỢT QUÁ GIỚI HẠN 1MB FIRESTORE
+    function compressImage(file, maxWidth = 800, quality = 0.6) {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -813,7 +811,6 @@
       });
     }
 
-    // ĐỒNG BỘ REALTIME TỪ FIREBASE CLOUD
     function initRealtimeSync() {
       db.collection("albums").onSnapshot((snapshot) => {
         let firebaseAlbums = [];
@@ -834,7 +831,6 @@
       });
     }
 
-    // TÍNH TUỔI BÉ KEM
     function calculateBabyAge(dateString) {
       const targetDate = new Date(dateString);
       let months = (targetDate.getFullYear() - BABY_BIRTHDAY.getFullYear()) * 12 + (targetDate.getMonth() - BABY_BIRTHDAY.getMonth());
@@ -850,7 +846,6 @@
       return `${months} Tháng ${days} Ngày Tuổi`;
     }
 
-    // CHUYỂN TAB CẢNH MÀN HÌNH
     function switchTab(tabName) {
       currentTab = tabName;
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -881,7 +876,6 @@
       }
     }
 
-    // RENDER TAB 1: ALBUM BÉ KEM
     function renderBabyAlbums() {
       const container = document.getElementById('tab-albums');
       container.innerHTML = '';
@@ -928,7 +922,6 @@
       });
     }
 
-    // RENDER TAB 3: ALBUM GIA ĐÌNH
     function renderFamilyAlbums() {
       const container = document.getElementById('tab-family');
       container.innerHTML = '';
@@ -974,7 +967,6 @@
       });
     }
 
-    // RENDER TAB 2: TOÀN BỘ ẢNH BÉ KEM
     function renderAllPhotosTab() {
       const container = document.getElementById('tab-photos');
       container.innerHTML = '';
@@ -1039,7 +1031,6 @@
       }
     }
 
-    // MODAL HANDLERS
     function openModal(isEdit = false) {
       document.getElementById('album-modal').classList.add('active');
       if (!isEdit) {
@@ -1070,17 +1061,16 @@
       }
     }
 
-    // XỬ LÝ CHỌN VÀ TỰ ĐỘNG NÉN ẢNH
     async function handlePhotosSelect(e) {
       const files = Array.from(e.target.files);
       if (files.length === 0) return;
 
       document.getElementById('loading').classList.add('active');
-      document.getElementById('loading-msg').innerText = "Đang tối ưu dung lượng ảnh...";
+      document.getElementById('loading-msg').innerText = "Đang nén tối ưu ảnh...";
 
       for (let file of files) {
-        if (currentPhotos.length < 10) {
-          const compressedBase64 = await compressImage(file, 1000, 0.7);
+        if (currentPhotos.length < 8) {
+          const compressedBase64 = await compressImage(file, 800, 0.55);
           currentPhotos.push(compressedBase64);
         }
       }
@@ -1107,7 +1097,6 @@
       renderPreviews();
     }
 
-    // LƯU KỶ NIỆM VÀO FIREBASE CLOUD
     async function saveAlbum(e) {
       e.preventDefault();
       if (currentPhotos.length === 0) {
@@ -1116,7 +1105,7 @@
       }
 
       document.getElementById('loading').classList.add('active');
-      document.getElementById('loading-msg').innerText = "Đang lưu lên đám mây...";
+      document.getElementById('loading-msg').innerText = "Đang đồng bộ lên Firebase...";
 
       const type = document.getElementById('album-type-input').value;
       const date = document.getElementById('album-date-input').value;
@@ -1134,23 +1123,13 @@
         if (editingId) {
           await db.collection("albums").doc(editingId).set(albumData, { merge: true });
         } else {
-          const newDoc = await db.collection("albums").add(albumData);
-          albumData.id = newDoc.id;
+          await db.collection("albums").add(albumData);
         }
 
-        const index = albums.findIndex(a => a.id === editingId);
-        if (index !== -1) {
-          albums[index] = { id: editingId, ...albumData };
-        } else {
-          albums.unshift({ id: albumData.id || Date.now().toString(), ...albumData });
-        }
-
-        localStorage.setItem('kem_albums', JSON.stringify(albums));
-        renderAllTabs();
         closeModal();
       } catch (err) {
-        console.error("Lỗi đồng bộ Firebase:", err);
-        alert("Có lỗi lưu dữ liệu: " + err.message);
+        console.error("Lỗi Firestore:", err);
+        alert("Lỗi: Tổng dung lượng ảnh trong album vẫn vượt quá giới hạn 1MB của Firebase. Bạn hãy chọn ít ảnh hơn trong 1 lần đăng nhé!");
       } finally {
         document.getElementById('loading').classList.remove('active');
       }
@@ -1173,24 +1152,20 @@
     async function deleteAlbum(id) {
       if (confirm('Bạn có chắc chắn muốn xóa kỷ niệm này không?')) {
         document.getElementById('loading').classList.add('active');
-        document.getElementById('loading-msg').innerText = "Đang xóa dữ liệu...";
+        document.getElementById('loading-msg').innerText = "Đang xóa...";
         try {
           await db.collection("albums").doc(id).delete();
         } catch (err) {
-          console.log("Xóa offline local");
+          console.log("Lỗi xóa:", err);
         }
-        albums = albums.filter(a => a.id !== id);
-        localStorage.setItem('kem_albums', JSON.stringify(albums));
-        renderAllTabs();
         document.getElementById('loading').classList.remove('active');
       }
     }
 
-    // ĐỔI AVATAR VÀ THEME
     async function changeAvatar(e) {
       const file = e.target.files[0];
       if (file) {
-        const compressedAvatar = await compressImage(file, 300, 0.8);
+        const compressedAvatar = await compressImage(file, 300, 0.7);
         document.getElementById('baby-avatar').src = compressedAvatar;
         localStorage.setItem('kem_avatar', compressedAvatar);
       }
@@ -1205,7 +1180,6 @@
       document.getElementById('theme-btn').innerHTML = next === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
     }
 
-    // LIGHTBOX FULLSCREEN
     function openLightboxPhotos(albumId, photoIdx) {
       const album = albums.find(a => a.id === albumId);
       if (!album) return;
@@ -1231,7 +1205,6 @@
       document.getElementById('lightbox').classList.remove('active');
     }
 
-    // INIT APP
     window.onload = () => {
       const savedAvatar = localStorage.getItem('kem_avatar');
       if (savedAvatar) document.getElementById('baby-avatar').src = savedAvatar;
@@ -1240,7 +1213,6 @@
       document.documentElement.setAttribute('data-theme', savedTheme);
       document.getElementById('theme-btn').innerHTML = savedTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
 
-      renderAllTabs();
       initRealtimeSync();
     };
   </script>
