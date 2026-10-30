@@ -785,6 +785,9 @@
           firebaseAlbums.push({ id: doc.id, ...doc.data() });
         });
 
+        // Sắp xếp theo ngày mới nhất lên đầu
+        firebaseAlbums.sort((a, b) => new Date(b.date) - new Date(a.date));
+
         if (firebaseAlbums.length > 0) {
           albums = firebaseAlbums;
           localStorage.setItem('kem_albums', JSON.stringify(albums));
@@ -822,6 +825,7 @@
         document.getElementById('tab-albums').classList.add('active');
         document.getElementById('nav-albums').classList.add('active');
         document.getElementById('topbar-subtext').innerText = 'Nguyễn Quỳnh Anh (Bé Kem) 💖';
+        renderBabyAlbums();
       } else if (tabName === 'photos') {
         document.getElementById('tab-photos').classList.add('active');
         document.getElementById('nav-photos').classList.add('active');
@@ -830,28 +834,37 @@
         document.getElementById('tab-family').classList.add('active');
         document.getElementById('nav-family').classList.add('active');
         document.getElementById('topbar-subtext').innerText = 'Kỷ Niệm Gia Đình 🏡';
+        renderFamilyAlbums();
       }
     }
 
     function renderAllTabs() {
       renderBabyAlbums();
       renderFamilyAlbums();
-      if (currentTab === 'photos') renderAllPhotosTab();
+      if (currentTab === 'photos') {
+        renderAllPhotosTab();
+      }
     }
 
-    // RENDER TAB 1: ALBUM BÉ KEM
+    // RENDER TAB 1: ALBUM BÉ KEM (Đảm bảo lọc linh hoạt mọi loại dữ liệu cũ và mới)
     function renderBabyAlbums() {
       const container = document.getElementById('tab-albums');
       container.innerHTML = '';
-      const babyAlbums = albums.filter(a => !a.type || a.type === 'baby');
+      
+      const babyAlbums = albums.filter(a => a.type === 'baby' || !a.type);
+
+      if (babyAlbums.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding: 40px; color:var(--text-muted);">Chưa có kỷ niệm nào của bé Kem. Hãy bấm nút Thêm nhé! 🍼</div>';
+        return;
+      }
 
       babyAlbums.forEach(album => {
         const ageText = calculateBabyAge(album.date);
         const formattedDate = new Date(album.date).toLocaleDateString('vi-VN');
-        const photoCount = album.photos.length;
+        const photoCount = album.photos ? album.photos.length : 0;
 
         let gridHtml = '';
-        const displayPhotos = album.photos.slice(0, 6);
+        const displayPhotos = album.photos ? album.photos.slice(0, 6) : [];
         displayPhotos.forEach((photo, idx) => {
           const isLast = idx === 5 && photoCount > 6;
           gridHtml += `
@@ -884,14 +897,20 @@
     function renderFamilyAlbums() {
       const container = document.getElementById('tab-family');
       container.innerHTML = '';
+      
       const familyAlbums = albums.filter(a => a.type === 'family');
+
+      if (familyAlbums.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding: 40px; color:var(--text-muted);">Chưa có kỷ niệm gia đình nào. Hãy bấm nút Thêm nhé! 🏡</div>';
+        return;
+      }
 
       familyAlbums.forEach(album => {
         const formattedDate = new Date(album.date).toLocaleDateString('vi-VN');
-        const photoCount = album.photos.length;
+        const photoCount = album.photos ? album.photos.length : 0;
 
         let gridHtml = '';
-        const displayPhotos = album.photos.slice(0, 6);
+        const displayPhotos = album.photos ? album.photos.slice(0, 6) : [];
         displayPhotos.forEach((photo, idx) => {
           const isLast = idx === 5 && photoCount > 6;
           gridHtml += `
@@ -924,10 +943,17 @@
     function renderAllPhotosTab() {
       const container = document.getElementById('tab-photos');
       container.innerHTML = '';
-      const babyAlbums = albums.filter(a => !a.type || a.type === 'baby');
-      const sortedAlbums = [...babyAlbums].sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      const babyAlbums = albums.filter(a => a.type === 'baby' || !a.type);
 
-      sortedAlbums.forEach(album => {
+      if (babyAlbums.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding: 40px; color:var(--text-muted);">Chưa có bức ảnh nào của bé Kem.</div>';
+        return;
+      }
+
+      babyAlbums.forEach(album => {
+        if (!album.photos || album.photos.length === 0) return;
+
         const section = document.createElement('div');
         section.className = 'all-photos-section';
         section.dataset.date = album.date;
@@ -1071,7 +1097,7 @@
           albumData.id = newDoc.id;
         }
 
-        // Cập nhật bộ nhớ Local
+        // Cập nhật bộ nhớ Local ngay lập tức
         const index = albums.findIndex(a => a.id === editingId);
         if (index !== -1) {
           albums[index] = { id: editingId, ...albumData };
