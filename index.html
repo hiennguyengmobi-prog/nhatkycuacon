@@ -638,7 +638,7 @@
   <!-- LOADING OVERLAY -->
   <div class="loading-overlay" id="loading">
     <div class="spinner"></div>
-    <div class="loading-text" id="loading-msg">Đang tối ưu & Đăng ảnh...</div>
+    <div class="loading-text" id="loading-msg">Đang xử lý...</div>
   </div>
 
   <!-- HEADER TOPBAR CỐ ĐỊNH -->
@@ -811,7 +811,9 @@
       });
     }
 
+    // ĐỒNG BỘ REALTIME TỪ FIREBASE (GỒM CẢ ALBUM VÀ AVATAR)
     function initRealtimeSync() {
+      // 1. Đồng bộ Albums
       db.collection("albums").onSnapshot((snapshot) => {
         let firebaseAlbums = [];
         snapshot.forEach((doc) => {
@@ -828,6 +830,17 @@
       }, (error) => {
         console.log("Đang chạy offline local:", error);
         renderAllTabs();
+      });
+
+      // 2. Đồng bộ Avatar chung của bé từ Firebase
+      db.collection("settings").doc("app_config").onSnapshot((doc) => {
+        if (doc.exists && doc.data().avatarUrl) {
+          const cloudAvatar = doc.data().avatarUrl;
+          document.getElementById('baby-avatar').src = cloudAvatar;
+          localStorage.setItem('kem_avatar', cloudAvatar);
+        }
+      }, (error) => {
+        console.log("Lỗi đồng bộ avatar:", error);
       });
     }
 
@@ -1129,7 +1142,7 @@
         closeModal();
       } catch (err) {
         console.error("Lỗi Firestore:", err);
-        alert("Lỗi: Tổng dung lượng ảnh trong album vẫn vượt quá giới hạn 1MB của Firebase. Bạn hãy chọn ít ảnh hơn trong 1 lần đăng nhé!");
+        alert("Lỗi: Tổng dung lượng ảnh trong album vượt quá 1MB. Bạn hãy chọn ít ảnh hơn trong 1 lần đăng nhé!");
       } finally {
         document.getElementById('loading').classList.remove('active');
       }
@@ -1162,12 +1175,29 @@
       }
     }
 
+    // ĐỔI VÀ ĐỒNG BỘ AVATAR LÊN FIREBASE CLOUD
     async function changeAvatar(e) {
       const file = e.target.files[0];
       if (file) {
+        document.getElementById('loading').classList.add('active');
+        document.getElementById('loading-msg').innerText = "Đang cập nhật Avatar chung...";
+
         const compressedAvatar = await compressImage(file, 300, 0.7);
-        document.getElementById('baby-avatar').src = compressedAvatar;
-        localStorage.setItem('kem_avatar', compressedAvatar);
+        
+        try {
+          // Lưu thẳng lên Cloud Firestore để các thiết bị khác tự động cập nhật theo
+          await db.collection("settings").doc("app_config").set({
+            avatarUrl: compressedAvatar
+          }, { merge: true });
+
+          document.getElementById('baby-avatar').src = compressedAvatar;
+          localStorage.setItem('kem_avatar', compressedAvatar);
+        } catch (err) {
+          console.error("Lỗi đổi avatar:", err);
+          alert("Không thể lưu avatar lên cloud: " + err.message);
+        } finally {
+          document.getElementById('loading').classList.remove('active');
+        }
       }
     }
 
