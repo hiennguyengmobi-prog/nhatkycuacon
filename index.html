@@ -1,943 +1,1192 @@
 <!DOCTYPE html>
-<html lang="vi" class="light">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nhật Ký Của Con - Bé Kem (Quỳnh Anh)</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        baby: {
-                            pink: '#FF8FAB',
-                            lightpink: '#FFE5EC',
-                            blue: '#4EA8DE',
-                            lightblue: '#E0F2FE',
-                            yellow: '#FFD166',
-                            peach: '#FFB5A7',
-                            darkbg: '#121826',
-                            darkcard: '#1E293B'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- FontAwesome icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 9999px;
-        }
-        .dark ::-webkit-scrollbar-thumb {
-            background: #475569;
-        }
-        .glass-header {
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Nhật Ký Của Con - Nguyễn Quỳnh Anh (Kem)</title>
+  
+  <!-- Cấu hình PWA & iOS Home Screen Icon -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Nhật Ký Của Con">
+  <link rel="apple-touch-icon" href="https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&q=80&w=180&h=180">
+  
+  <!-- Font Awesome CDN cho Icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <style>
+    :root {
+      --primary-color: #ff477e;
+      --primary-hover: #ff2a6d;
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-color: #2b2d42;
+      --text-muted: #6c757d;
+      --border-color: #e9ecef;
+      --shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      --badge-bg: #ffe5ec;
+      --badge-color: #d80032;
+      --topbar-height: 70px;
+      --navbar-height: 60px;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --text-color: #f8f9fa;
+      --text-muted: #a0a0a0;
+      --border-color: #2d2d2d;
+      --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      --badge-bg: #3d0016;
+      --badge-color: #ff758f;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+      padding-top: calc(var(--topbar-height) + 12px);
+      padding-bottom: calc(var(--navbar-height) + 20px);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0 12px;
+    }
+
+    /* TOPBAR CỐ ĐỊNH */
+    header.sticky-topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--topbar-height);
+      background-color: var(--card-bg);
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+
+    .topbar-content {
+      max-width: 600px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .app-branding {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+    }
+
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary-color);
+    }
+
+    .avatar-edit-btn {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .app-title-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .app-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sync-status {
+      font-size: 11px;
+      color: #2ec4b6;
+      margin-left: 4px;
+    }
+
+    .baby-name {
+      font-size: 12px;
+      color: var(--primary-color);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: all 0.2s ease;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle {
+      width: 38px;
+      height: 38px;
+      aspect-ratio: 1/1;
+      flex-shrink: 0;
+      border-radius: 50%;
+      border: none;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px var(--border-color);
+    }
+
+    .btn-add {
+      background: linear-gradient(135deg, var(--primary-color), #ff758f);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(255, 71, 126, 0.3);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* BOTTOM NAVBAR (3 TAB) */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--navbar-height);
+      background-color: var(--card-bg);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 900;
+      box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      height: 100%;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: none;
+      transition: color 0.2s;
+    }
+
+    .nav-item i {
+      font-size: 18px;
+    }
+
+    .nav-item.active {
+      color: var(--primary-color);
+    }
+
+    /* CONTENT TABS */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .album-card {
+      background-color: var(--card-bg);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .album-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .age-badge {
+      background-color: var(--badge-bg);
+      color: var(--badge-color);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .family-badge {
+      background-color: #e3f2fd;
+      color: #1976d2;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .album-date {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .album-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text-color);
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .photo-item {
+      position: relative;
+      aspect-ratio: 1/1;
+      background-color: var(--border-color);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .more-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .more-overlay span {
+      font-size: 11px;
+      font-weight: 400;
+      margin-top: 2px;
+    }
+
+    .album-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    /* GRID TAB BỘ ẢNH CONTINUOUS */
+    .all-photos-section {
+      margin-bottom: 24px;
+    }
+
+    .section-date-header {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary-color);
+      padding: 8px 4px;
+      position: sticky;
+      top: var(--topbar-height);
+      background-color: var(--bg-color);
+      z-index: 800;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .all-photos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    /* MODAL FORM */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary-color);
+    }
+
+    .btn-close {
+      background: var(--bg-color);
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-color);
+    }
+
+    input[type="date"], input[type="text"], select {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .dropzone {
+      border: 2px dashed var(--primary-color);
+      background-color: var(--badge-bg);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+
+    .dropzone i {
+      font-size: 28px;
+      color: var(--primary-color);
+      margin-bottom: 8px;
+    }
+
+    .dropzone p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .preview-list {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .preview-item {
+      position: relative;
+      aspect-ratio: 1/1;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .preview-remove {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-secondary {
+      background: var(--bg-color);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    /* LIGHTBOX FULLSCREEN */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 2000;
+      padding: 20px 10px;
+    }
+
+    .lightbox.active {
+      display: flex;
+    }
+
+    .lightbox-header {
+      display: flex;
+      justify-content: space-between;
+      color: white;
+      padding: 10px;
+    }
+
+    .lightbox-img-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .lightbox-img {
+      max-width: 100%;
+      max-height: 80vh;
+      object-fit: contain;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    /* LOADING SPINNER */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+    }
+    .loading-overlay.active { display: flex; }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-baby-darkbg dark:text-slate-100 min-h-screen transition-colors duration-300 pb-20 md:pb-10">
+<body>
 
-    <!-- Header App -->
-    <header class="sticky top-0 z-30 glass-header bg-white/85 dark:bg-slate-900/85 border-b border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
-        <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-rose-400 to-pink-300 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-pink-200 dark:shadow-none">
-                    👶
-                </div>
-                <div>
-                    <h1 class="font-extrabold text-base md:text-lg leading-tight text-slate-900 dark:text-white flex items-center gap-1.5">
-                        Nhật Ký Của Con
-                        <span class="inline-block w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                    </h1>
-                    <p class="text-xs text-rose-500 dark:text-rose-400 font-semibold">Nguyễn Quỳnh Anh (Bé Kem) 💕</p>
-                </div>
-            </div>
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+  </div>
 
-            <div class="flex items-center gap-2">
-                <!-- Theme Toggle Button -->
-                <button id="themeToggleBtn" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-amber-400 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition">
-                    <i class="fa-solid fa-moon text-sm dark:hidden"></i>
-                    <i class="fa-solid fa-sun text-sm hidden dark:block"></i>
-                </button>
-                <!-- Add Album Button -->
-                <button id="openAddModalBtn" class="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white px-3.5 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-1.5 shadow-md shadow-rose-200 dark:shadow-none transition transform active:scale-95">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Thêm Kỷ Niệm</span>
-                </button>
-            </div>
+  <!-- HEADER TOPBAR CỐ ĐỊNH -->
+  <header class="sticky-topbar">
+    <div class="topbar-content">
+      <div class="app-branding">
+        <div class="avatar-wrapper">
+          <img id="baby-avatar" class="avatar-img" src="https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&q=80&w=200" alt="Bé Kem">
+          <button class="avatar-edit-btn" onclick="document.getElementById('avatar-input').click()"><i class="fa-solid fa-camera"></i></button>
         </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="max-w-3xl mx-auto px-4 py-5 space-y-6">
-
-        <!-- Baby Profile Header Card -->
-        <div class="bg-gradient-to-r from-rose-100 via-pink-50 to-sky-100 dark:from-slate-800 dark:via-slate-800/80 dark:to-slate-800 p-4 md:p-5 rounded-3xl border border-rose-200/60 dark:border-slate-700 shadow-sm relative overflow-hidden">
-            <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-rose-300/20 dark:bg-rose-500/10 rounded-full blur-xl pointer-events-none"></div>
-            
-            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left relative z-10">
-                <!-- Avatar with Change Button -->
-                <div class="relative group cursor-pointer" id="changeAvatarBtn" title="Bấm để đổi ảnh đại diện">
-                    <img id="babyAvatar" src="https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=300" alt="Bé Kem - Nguyễn Quỳnh Anh" class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-md transition duration-200 group-hover:brightness-90">
-                    <span class="absolute bottom-0 right-0 bg-rose-500 hover:bg-rose-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs shadow border-2 border-white dark:border-slate-700 transition transform group-hover:scale-110">
-                        <i class="fa-solid fa-camera"></i>
-                    </span>
-                    <input type="file" id="avatarFileInput" accept="image/*" class="hidden">
-                </div>
-                <div class="flex-1">
-                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                        <h2 class="text-xl font-extrabold text-slate-800 dark:text-white">Nguyễn Quỳnh Anh (Bé Kem)</h2>
-                        <span class="bg-rose-500/10 text-rose-600 dark:bg-rose-400/20 dark:text-rose-300 text-xs font-bold px-2.5 py-1 rounded-full border border-rose-200 dark:border-rose-800/50">
-                            🎂 17/09/2025
-                        </span>
-                    </div>
-                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-1.5 flex items-center justify-center sm:justify-start gap-1 font-medium">
-                        <i class="fa-solid fa-sparkles text-amber-500"></i>
-                        Hôm nay bé đã: <span id="currentAgeText" class="font-bold text-rose-600 dark:text-rose-400">...</span>
-                    </p>
-                    <div class="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-slate-500 dark:text-slate-400">
-                        <span class="bg-white/80 dark:bg-slate-900/60 px-3 py-1 rounded-full font-medium border border-slate-200/60 dark:border-slate-700 shadow-2xs">
-                            📸 <strong id="totalAlbumsCount" class="text-slate-800 dark:text-white">0</strong> Album
-                        </span>
-                        <span class="bg-white/80 dark:bg-slate-900/60 px-3 py-1 rounded-full font-medium border border-slate-200/60 dark:border-slate-700 shadow-2xs">
-                            🖼️ <strong id="totalPhotosCount" class="text-slate-800 dark:text-white">0</strong> Bức ảnh
-                        </span>
-                    </div>
-                </div>
-            </div>
+        <div class="app-title-group">
+          <div class="app-title">
+            Nhật Ký Của Con 🍼
+            <span class="sync-status" title="Tự động đồng bộ Online"><i class="fa-solid fa-cloud"></i></span>
+          </div>
+          <div class="baby-name" id="topbar-subtext">Nguyễn Quỳnh Anh (Bé Kem) 💖</div>
         </div>
-
-        <!-- Filter & Title Section -->
-        <div class="flex items-center justify-between pt-1">
-            <h3 class="font-extrabold text-base md:text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <i class="fa-solid fa-images text-rose-500"></i>
-                Dòng Thời Gian
-            </h3>
-            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Sắp xếp: Mới nhất</span>
-        </div>
-
-        <!-- Album List Container -->
-        <div id="albumList" class="space-y-6">
-            <!-- Albums will be injected here via JavaScript -->
-        </div>
-
-        <!-- Empty State -->
-        <div id="emptyState" class="hidden text-center py-12 bg-white dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 p-6">
-            <div class="w-16 h-16 mx-auto mb-3 bg-rose-100 dark:bg-slate-700 text-rose-500 text-2xl rounded-full flex items-center justify-center">
-                📷
-            </div>
-            <h4 class="font-bold text-slate-700 dark:text-slate-200">Chưa có album kỷ niệm nào</h4>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">Hãy nhấn nút "Thêm Kỷ Niệm" để lưu giữ những khoảnh khắc đáng yêu của bé Kem nhé!</p>
-        </div>
-
-    </main>
-
-    <!-- Modal Form Add/Edit Album -->
-    <div id="albumModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 hidden opacity-0 transition-opacity duration-200">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 transform scale-95 transition-transform duration-200 max-h-[90vh] flex flex-col">
-            <!-- Modal Header -->
-            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
-                <h3 id="modalTitle" class="font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-                    <i class="fa-solid fa-camera-retro text-rose-500"></i>
-                    Thêm Album Mới
-                </h3>
-                <button id="closeModalBtn" class="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-500 dark:text-slate-300 flex items-center justify-center hover:bg-slate-300 transition">
-                    <i class="fa-solid fa-xmark text-sm"></i>
-                </button>
-            </div>
-
-            <!-- Modal Form Body -->
-            <div class="p-5 overflow-y-auto space-y-4 flex-1">
-                <!-- Date input -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Ngày chụp / Đăng ảnh <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="date" id="albumDateInput" class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-400">
-                    <p id="calculatedAgePreview" class="text-xs text-rose-500 font-semibold mt-1">Đang tính tuổi bé...</p>
-                </div>
-
-                <!-- Custom Title (Optional) -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Tiêu đề / Ghi chú ngắn (Không bắt buộc)
-                    </label>
-                    <input type="text" id="albumNoteInput" placeholder="Ví dụ: Lần đầu đi chơi công viên, Bé tập lẫy..." class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-400">
-                </div>
-
-                <!-- Image Upload Section -->
-                <div>
-                    <div class="flex items-center justify-between mb-1">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            Ảnh trong album <span class="text-rose-500">*</span>
-                        </label>
-                        <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Tối đa <strong class="text-rose-500">10</strong> ảnh</span>
-                    </div>
-
-                    <!-- Upload Box -->
-                    <div id="dropZone" class="border-2 border-dashed border-rose-300 dark:border-slate-700 hover:border-rose-400 dark:hover:border-rose-500 bg-rose-50/50 dark:bg-slate-800/40 rounded-2xl p-4 text-center cursor-pointer transition">
-                        <input type="file" id="imageFileInput" multiple accept="image/*" class="hidden">
-                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-rose-400 mb-1"></i>
-                        <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Nhấp để chọn ảnh hoặc kéo thả vào đây</p>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Hỗ trợ JPG, PNG, WEBP (Có thể chọn nhiều ảnh)</p>
-                    </div>
-
-                    <!-- Photo Previews Grid -->
-                    <div id="photoPreviewGrid" class="grid grid-cols-4 gap-2 mt-3">
-                        <!-- Previews appended here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-end gap-2">
-                <button id="cancelModalBtn" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
-                    Hủy bỏ
-                </button>
-                <button id="saveAlbumBtn" class="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white px-5 py-2 rounded-xl font-bold text-xs shadow-md shadow-rose-200 dark:shadow-none transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-check"></i>
-                    <span>Lưu Album</span>
-                </button>
-            </div>
-        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <button class="btn-add" onclick="openModal()">
+          <i class="fa-solid fa-plus"></i> Thêm
+        </button>
+      </div>
     </div>
+  </header>
 
-    <!-- Fullscreen Lightbox Viewer -->
-    <div id="lightbox" class="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between hidden opacity-0 transition-opacity duration-300">
-        <!-- Lightbox Header -->
-        <div class="px-4 py-3 flex items-center justify-between text-white bg-gradient-to-b from-black/80 to-transparent z-10">
-            <div>
-                <h4 id="lightboxTitle" class="font-extrabold text-sm md:text-base">2 Tháng 19 Ngày Tuổi</h4>
-                <p id="lightboxSub" class="text-xs text-slate-300">16/05/2026</p>
-            </div>
-            <button id="closeLightboxBtn" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+  <div class="container">
+    <!-- TAB 1: ALBUM KỶ NIỆM BÉ KEM -->
+    <main id="tab-albums" class="tab-content active"></main>
+
+    <!-- TAB 2: TOÀN BỘ ẢNH BÉ KEM -->
+    <main id="tab-photos" class="tab-content"></main>
+
+    <!-- TAB 3: ALBUM GIA ĐÌNH -->
+    <main id="tab-family" class="tab-content"></main>
+  </div>
+
+  <!-- BOTTOM NAVBAR (3 TAB) -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="nav-albums" onclick="switchTab('albums')">
+      <i class="fa-solid fa-book-bookmark"></i>
+      <span>Kỷ Niệm</span>
+    </button>
+    <button class="nav-item" id="nav-photos" onclick="switchTab('photos')">
+      <i class="fa-solid fa-images"></i>
+      <span>Bộ Ảnh</span>
+    </button>
+    <button class="nav-item" id="nav-family" onclick="switchTab('family')">
+      <i class="fa-solid fa-people-roof"></i>
+      <span>Gia Đình</span>
+    </button>
+  </nav>
+
+  <!-- MODAL THÊM / SỬA ALBUM -->
+  <div class="modal" id="album-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-title-text"><i class="fa-solid fa-images"></i> Thêm Kỷ Niệm Mới</div>
+        <button class="btn-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <form id="album-form" onsubmit="saveAlbum(event)">
+        <div class="form-group">
+          <label class="form-label">Loại Kỷ Niệm *</label>
+          <select id="album-type-input" onchange="updateAgePreview()">
+            <option value="baby">👶 Album Bé Kem</option>
+            <option value="family">🏡 Album Gia Đình</option>
+          </select>
         </div>
 
-        <!-- Lightbox Main Image & Nav Controls -->
-        <div class="relative flex-1 flex items-center justify-center p-2 select-none overflow-hidden">
-            <button id="prevPhotoBtn" class="absolute left-3 z-10 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center backdrop-blur-xs transition">
-                <i class="fa-solid fa-chevron-left"></i>
-            </button>
-
-            <img id="lightboxImg" src="" alt="Album photo" class="max-h-full max-w-full object-contain rounded-lg transition-transform duration-200">
-
-            <button id="nextPhotoBtn" class="absolute right-3 z-10 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center backdrop-blur-xs transition">
-                <i class="fa-solid fa-chevron-right"></i>
-            </button>
+        <div class="form-group">
+          <label class="form-label">Ngày chụp / Đăng ảnh *</label>
+          <input type="date" id="album-date-input" required onchange="updateAgePreview()">
+          <div id="age-preview" style="font-size:12px; color:var(--primary-color); margin-top:6px; font-weight:600;"></div>
         </div>
 
-        <!-- Lightbox Footer Thumbnails & Counter -->
-        <div class="p-3 bg-gradient-to-t from-black/90 to-transparent z-10 flex flex-col items-center gap-2">
-            <span id="lightboxCounter" class="text-xs text-slate-300 font-medium bg-black/50 px-3 py-1 rounded-full border border-white/10">1 / 8</span>
-            <!-- Thumbnails track -->
-            <div id="lightboxThumbnails" class="flex items-center gap-2 overflow-x-auto max-w-full py-1 px-2">
-                <!-- Thumbnails injected here -->
-            </div>
+        <div class="form-group">
+          <label class="form-label">Tiêu đề / Ghi chú ngắn</label>
+          <input type="text" id="album-title-input" placeholder="Ví dụ: Bé tập lẫy, Cả nhà đi du lịch...">
         </div>
+
+        <div class="form-group">
+          <label class="form-label">Ảnh trong album (Tối đa 10 ảnh) *</label>
+          <div class="dropzone" onclick="document.getElementById('photos-input').click()">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <p>Nhấp để chọn ảnh từ điện thoại/máy tính</p>
+          </div>
+          <div class="preview-list" id="preview-list"></div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeModal()">Hủy bỏ</button>
+          <button type="submit" class="btn-primary">✓ Lưu Kỷ Niệm</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold transform translate-y-20 opacity-0 transition-all duration-300 border border-slate-700">
-        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
-        <span id="toastMsg">Thao tác thành công!</span>
+  <!-- LIGHTBOX FULLSCREEN -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <div class="lightbox-header">
+      <span id="lightbox-counter">1/1</span>
+      <i class="fa-solid fa-xmark" style="font-size:20px; cursor:pointer;"></i>
     </div>
-
-    <!-- Application Script -->
-    <script>
-        // --- CONSTANTS & CONFIG ---
-        const BABY_BIRTHDATE = "2025-09-17"; // Ngày sinh của bé Kem
-        const MAX_PHOTOS = 10;
-        const DB_NAME = "NhatKyCuaConDB";
-        const DB_VERSION = 1;
-        const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=300";
-
-        // --- SAMPLE INITIAL DATA ---
-        const INITIAL_ALBUMS = [
-            {
-                id: "album-sample-1",
-                date: "2026-05-16",
-                note: "Bé Kem ngủ ngoan và tập lẫy giỏi lắm!",
-                photos: [
-                    "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=600",
-                    "https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&q=80&w=600",
-                    "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&q=80&w=600",
-                    "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=600",
-                    "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&q=80&w=600",
-                    "https://images.unsplash.com/photo-1566004100631-35d015d6a491?auto=format&fit=crop&q=80&w=600",
-                    "https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&q=80&w=600",
-                    "https://images.unsplash.com/photo-1510154221590-ff63e90a136f?auto=format&fit=crop&q=80&w=600"
-                ]
-            },
-            {
-                id: "album-sample-2",
-                date: "2026-05-11",
-                note: "Kỷ niệm bé Kem trọn 7 tháng tuổi cưng xỉu",
-                photos: [
-                    "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&q=80&w=600",
-                    "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&q=80&w=600",
-                    "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=600",
-                    "https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&q=80&w=600",
-                    "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=600",
-                    "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&q=80&w=600"
-                ]
-            }
-        ];
-
-        // --- STATE APP ---
-        let albums = [];
-        let editingAlbumId = null;
-        let currentModalPhotos = []; // Base64 or URL strings
-        let currentViewerIndex = { albumId: null, photoIndex: 0 };
-        let db = null;
-
-        // --- INDEXED DB HELPER FOR OFFLINE STORAGE ---
-        function initDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
-                request.onupgradeneeded = (e) => {
-                    const database = e.target.result;
-                    if (!database.objectStoreNames.contains("albums")) {
-                        database.createObjectStore("albums", { keyPath: "id" });
-                    }
-                };
-                request.onsuccess = (e) => {
-                    db = e.target.result;
-                    resolve(db);
-                };
-                request.onerror = (e) => reject(e);
-            });
-        }
-
-        async function loadAlbumsFromDB() {
-            if (!db) await initDB();
-            return new Promise((resolve) => {
-                const tx = db.transaction("albums", "readonly");
-                const store = tx.objectStore("albums");
-                const req = store.getAll();
-                req.onsuccess = () => {
-                    let data = req.result;
-                    if (!data || data.length === 0) {
-                        // Seed initial sample data
-                        data = INITIAL_ALBUMS;
-                        saveAllAlbumsToDB(data);
-                    }
-                    // Sort albums by date descending
-                    data.sort((a, b) => new Date(b.date) - new Date(a.date));
-                    resolve(data);
-                };
-                req.onerror = () => resolve(INITIAL_ALBUMS);
-            });
-        }
-
-        async function saveAlbumToDB(album) {
-            if (!db) await initDB();
-            return new Promise((resolve) => {
-                const tx = db.transaction("albums", "readwrite");
-                const store = tx.objectStore("albums");
-                store.put(album);
-                tx.oncomplete = () => resolve(true);
-            });
-        }
-
-        async function deleteAlbumFromDB(id) {
-            if (!db) await initDB();
-            return new Promise((resolve) => {
-                const tx = db.transaction("albums", "readwrite");
-                const store = tx.objectStore("albums");
-                store.delete(id);
-                tx.oncomplete = () => resolve(true);
-            });
-        }
-
-        async function saveAllAlbumsToDB(dataList) {
-            if (!db) await initDB();
-            const tx = db.transaction("albums", "readwrite");
-            const store = tx.objectStore("albums");
-            dataList.forEach(item => store.put(item));
-        }
-
-        // --- DATE & AGE CALCULATOR LOGIC ---
-        function calculateAgeString(targetDateStr) {
-            const birth = new Date(BABY_BIRTHDATE);
-            const target = new Date(targetDateStr);
-
-            if (target < birth) {
-                return "Chưa sinh";
-            }
-
-            let years = target.getFullYear() - birth.getFullYear();
-            let months = target.getMonth() - birth.getMonth();
-            let days = target.getDate() - birth.getDate();
-
-            if (days < 0) {
-                months--;
-                // Get days in previous month
-                const prevMonthDate = new Date(target.getFullYear(), target.getMonth(), 0);
-                days += prevMonthDate.getDate();
-            }
-
-            if (months < 0) {
-                years--;
-                months += 12;
-            }
-
-            const totalMonths = years * 12 + months;
-
-            if (totalMonths === 0 && days === 0) {
-                return "Mới sinh (Ngày đầu tiên)";
-            }
-            if (totalMonths === 0) {
-                return `${days} Ngày Tuổi`;
-            }
-            if (days === 0) {
-                return `${totalMonths} Tháng Tuổi`;
-            }
-            return `${totalMonths} Tháng ${days} Ngày Tuổi`;
-        }
-
-        function formatDateVN(dateStr) {
-            if (!dateStr) return '';
-            const [y, m, d] = dateStr.split('-');
-            return `${d}/${m}/${y}`;
-        }
-
-        // --- UI RENDERING FUNCTIONS ---
-        function renderHeaderInfo() {
-            // Load saved avatar if exists
-            const savedAvatar = localStorage.getItem('babyAvatarUrl');
-            const avatarImg = document.getElementById('babyAvatar');
-            if (avatarImg) {
-                avatarImg.src = savedAvatar || DEFAULT_AVATAR;
-            }
-
-            // Calculate current age
-            const todayStr = new Date().toISOString().split('T')[0];
-            document.getElementById('currentAgeText').textContent = calculateAgeString(todayStr);
-
-            // Calculate totals
-            document.getElementById('totalAlbumsCount').textContent = albums.length;
-            const totalPhotos = albums.reduce((acc, cur) => acc + (cur.photos ? cur.photos.length : 0), 0);
-            document.getElementById('totalPhotosCount').textContent = totalPhotos;
-        }
-
-        // --- AVATAR UPLOAD LOGIC ---
-        function initAvatarUploader() {
-            const avatarContainer = document.getElementById('changeAvatarBtn');
-            const avatarFileInput = document.getElementById('avatarFileInput');
-
-            if (avatarContainer && avatarFileInput) {
-                avatarContainer.addEventListener('click', () => {
-                    avatarFileInput.click();
-                });
-
-                avatarFileInput.addEventListener('change', async (e) => {
-                    if (e.target.files && e.target.files[0]) {
-                        const file = e.target.files[0];
-                        if (!file.type.startsWith('image/')) {
-                            showToast("Vui lòng chọn một file hình ảnh!", "warning");
-                            return;
-                        }
-                        try {
-                            const base64Avatar = await readFileAsBase64(file);
-                            localStorage.setItem('babyAvatarUrl', base64Avatar);
-                            document.getElementById('babyAvatar').src = base64Avatar;
-                            showToast("Đã đổi ảnh đại diện cho bé Kem!");
-                        } catch (err) {
-                            showToast("Có lỗi khi tải ảnh đại diện!", "warning");
-                        }
-                    }
-                });
-            }
-        }
-
-        function renderAlbums() {
-            const container = document.getElementById('albumList');
-            const emptyState = document.getElementById('emptyState');
-
-            container.innerHTML = '';
-
-            if (albums.length === 0) {
-                emptyState.classList.remove('hidden');
-                return;
-            } else {
-                emptyState.classList.add('hidden');
-            }
-
-            albums.forEach((album) => {
-                const ageText = calculateAgeString(album.date);
-                const photoCount = album.photos ? album.photos.length : 0;
-
-                const albumCard = document.createElement('div');
-                albumCard.className = "bg-white dark:bg-slate-800 rounded-3xl p-4 md:p-5 shadow-sm border border-slate-200/70 dark:border-slate-700/80 transition hover:shadow-md";
-
-                // Build photos grid layout similar to image reference
-                let gridHtml = '';
-                if (photoCount > 0) {
-                    const displayPhotos = album.photos.slice(0, 6);
-                    const remainingCount = photoCount - 6;
-
-                    gridHtml = `<div class="grid grid-cols-3 gap-1.5 md:gap-2 rounded-2xl overflow-hidden cursor-pointer bg-slate-100 dark:bg-slate-900" onclick="openLightbox('${album.id}', 0)">`;
-
-                    displayPhotos.forEach((imgSrc, idx) => {
-                        const isLastItem = (idx === 5) && (remainingCount > 0);
-                        gridHtml += `
-                            <div class="relative aspect-square overflow-hidden bg-slate-200 dark:bg-slate-700">
-                                <img src="${imgSrc}" loading="lazy" alt="Ảnh bé Kem" class="w-full h-full object-cover transition duration-300 hover:scale-105">
-                                ${isLastItem ? `
-                                    <div class="absolute inset-0 bg-black/50 backdrop-blur-xs flex flex-col items-center justify-center text-white">
-                                        <span class="font-black text-lg md:text-xl">+${remainingCount + 1}</span>
-                                        <span class="text-[10px] md:text-xs opacity-90"><i class="fa-solid fa-images"></i> ${photoCount} ảnh</span>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        `;
-                    });
-
-                    gridHtml += `</div>`;
-                }
-
-                albumCard.innerHTML = `
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-300 font-extrabold text-xs px-3 py-1 rounded-full border border-sky-200 dark:border-sky-800/60 shadow-2xs">
-                                👶 ${ageText}
-                            </span>
-                            <span class="text-xs text-slate-400 dark:text-slate-400 font-medium flex items-center gap-1">
-                                <i class="fa-regular fa-calendar"></i> ${formatDateVN(album.date)}
-                            </span>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex items-center gap-1">
-                            <button onclick="openEditModal('${album.id}')" class="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition" title="Chỉnh sửa">
-                                <i class="fa-solid fa-pen-to-square text-xs"></i>
-                            </button>
-                            <button onclick="confirmDeleteAlbum('${album.id}')" class="w-8 h-8 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/50 text-rose-500 flex items-center justify-center transition" title="Xóa">
-                                <i class="fa-solid fa-trash text-xs"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    ${album.note ? `<p class="text-xs md:text-sm text-slate-700 dark:text-slate-200 font-medium mb-3 line-clamp-2">${escapeHtml(album.note)}</p>` : ''}
-
-                    ${gridHtml}
-
-                    <div class="mt-3 flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/50">
-                        <span class="text-[11px] text-slate-400 dark:text-slate-400 font-medium">
-                            <i class="fa-solid fa-image text-rose-400"></i> ${photoCount} bức ảnh trong album
-                        </span>
-                        <button onclick="openLightbox('${album.id}', 0)" class="text-xs font-bold text-rose-500 hover:text-rose-600 dark:text-rose-400 flex items-center gap-1">
-                            Xem tất cả <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                        </button>
-                    </div>
-                `;
-
-                container.appendChild(albumCard);
-            });
-
-            renderHeaderInfo();
-        }
-
-        // --- MODAL & FORM LOGIC ---
-        function openAddModal() {
-            editingAlbumId = null;
-            document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-camera-retro text-rose-500"></i> Thêm Album Mới`;
-            
-            // Default to today
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('albumDateInput').value = today;
-            document.getElementById('albumNoteInput').value = '';
-            currentModalPhotos = [];
-            
-            updateCalculatedAgePreview(today);
-            renderPhotoPreviews();
-            showModal();
-        }
-
-        function openEditModal(id) {
-            const album = albums.find(a => a.id === id);
-            if (!album) return;
-
-            editingAlbumId = id;
-            document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-rose-500"></i> Chỉnh Sửa Album`;
-            
-            document.getElementById('albumDateInput').value = album.date;
-            document.getElementById('albumNoteInput').value = album.note || '';
-            currentModalPhotos = [...(album.photos || [])];
-
-            updateCalculatedAgePreview(album.date);
-            renderPhotoPreviews();
-            showModal();
-        }
-
-        function showModal() {
-            const modal = document.getElementById('albumModal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modal.querySelector('div').classList.remove('scale-95');
-            }, 10);
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('albumModal');
-            modal.classList.add('opacity-0');
-            modal.querySelector('div').classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 200);
-        }
-
-        function updateCalculatedAgePreview(dateStr) {
-            const previewEl = document.getElementById('calculatedAgePreview');
-            if (dateStr) {
-                const age = calculateAgeString(dateStr);
-                previewEl.textContent = `👶 Tuổi bé Kem khi chụp: ${age}`;
-            } else {
-                previewEl.textContent = '';
-            }
-        }
-
-        function renderPhotoPreviews() {
-            const grid = document.getElementById('photoPreviewGrid');
-            grid.innerHTML = '';
-
-            currentModalPhotos.forEach((src, idx) => {
-                const div = document.createElement('div');
-                div.className = "relative aspect-square rounded-xl overflow-hidden group bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700";
-                div.innerHTML = `
-                    <img src="${src}" class="w-full h-full object-cover">
-                    <button onclick="removePhotoFromModal(${idx})" class="absolute top-1 right-1 w-6 h-6 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center opacity-90 hover:opacity-100 shadow transition">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                    <span class="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1.5 py-0.2 rounded font-medium">${idx + 1}</span>
-                `;
-                grid.appendChild(div);
-            });
-        }
-
-        function removePhotoFromModal(index) {
-            currentModalPhotos.splice(index, 1);
-            renderPhotoPreviews();
-        }
-
-        async function handleFilesSelected(files) {
-            const fileList = Array.from(files);
-            const remainingQuota = MAX_PHOTOS - currentModalPhotos.length;
-
-            if (remainingQuota <= 0) {
-                showToast("Đã đạt giới hạn tối đa 10 ảnh cho album này!", "warning");
-                return;
-            }
-
-            const filesToProcess = fileList.slice(0, remainingQuota);
-
-            for (const file of filesToProcess) {
-                if (!file.type.startsWith('image/')) continue;
-                const base64 = await readFileAsBase64(file);
-                currentModalPhotos.push(base64);
-            }
-
-            if (fileList.length > remainingQuota) {
-                showToast(`Chỉ thêm được ${remainingQuota} ảnh (Giới hạn tối đa 10 ảnh/album)`, "info");
-            }
-
-            renderPhotoPreviews();
-        }
-
-        function readFileAsBase64(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.readAsDataURL(file);
-            });
-        }
-
-        async function saveAlbum() {
-            const dateInput = document.getElementById('albumDateInput').value;
-            const noteInput = document.getElementById('albumNoteInput').value.trim();
-
-            if (!dateInput) {
-                showToast("Vui lòng chọn ngày tháng đăng ảnh!", "warning");
-                return;
-            }
-
-            if (currentModalPhotos.length === 0) {
-                showToast("Vui lòng tải lên ít nhất 1 bức ảnh!", "warning");
-                return;
-            }
-
-            if (editingAlbumId) {
-                // Update existing
-                const index = albums.findIndex(a => a.id === editingAlbumId);
-                if (index !== -1) {
-                    albums[index] = {
-                        ...albums[index],
-                        date: dateInput,
-                        note: noteInput,
-                        photos: currentModalPhotos
-                    };
-                    await saveAlbumToDB(albums[index]);
-                    showToast("Cập nhật album thành công!");
-                }
-            } else {
-                // Add new album
-                const newAlbum = {
-                    id: 'album-' + Date.now(),
-                    date: dateInput,
-                    note: noteInput,
-                    photos: currentModalPhotos
-                };
-                albums.unshift(newAlbum);
-                await saveAlbumToDB(newAlbum);
-                showToast("Thêm album mới thành công!");
-            }
-
-            // Sort by date descending
-            albums.sort((a, b) => new Date(b.date) - new Date(a.date));
-            renderAlbums();
-            closeModal();
-        }
-
-        async function confirmDeleteAlbum(id) {
-            if (confirm("Bạn có chắc chắn muốn xóa album kỷ niệm này của bé Kem không?")) {
-                albums = albums.filter(a => a.id !== id);
-                await deleteAlbumFromDB(id);
-                renderAlbums();
-                showToast("Đã xóa album!", "info");
-            }
-        }
-
-        // --- FULLSCREEN LIGHTBOX VIEWER ---
-        function openLightbox(albumId, photoIndex = 0) {
-            const album = albums.find(a => a.id === albumId);
-            if (!album || !album.photos || album.photos.length === 0) return;
-
-            currentViewerIndex = { albumId, photoIndex };
-            updateLightboxContent();
-
-            const lightbox = document.getElementById('lightbox');
-            lightbox.classList.remove('hidden');
-            setTimeout(() => {
-                lightbox.classList.remove('opacity-0');
-            }, 10);
-        }
-
-        function closeLightbox() {
-            const lightbox = document.getElementById('lightbox');
-            lightbox.classList.add('opacity-0');
-            setTimeout(() => {
-                lightbox.classList.add('hidden');
-            }, 200);
-        }
-
-        function updateLightboxContent() {
-            const album = albums.find(a => a.id === currentViewerIndex.albumId);
-            if (!album) return;
-
-            const total = album.photos.length;
-            const idx = currentViewerIndex.photoIndex;
-            const imgSrc = album.photos[idx];
-
-            document.getElementById('lightboxImg').src = imgSrc;
-            document.getElementById('lightboxTitle').textContent = `👶 ${calculateAgeString(album.date)}`;
-            document.getElementById('lightboxSub').textContent = `📅 ${formatDateVN(album.date)} ${album.note ? '• ' + album.note : ''}`;
-            document.getElementById('lightboxCounter').textContent = `${idx + 1} / ${total}`;
-
-            // Render thumbnails track
-            const thumbContainer = document.getElementById('lightboxThumbnails');
-            thumbContainer.innerHTML = '';
-            album.photos.forEach((pSrc, pIdx) => {
-                const thumb = document.createElement('img');
-                thumb.src = pSrc;
-                thumb.className = `w-12 h-12 rounded-lg object-cover cursor-pointer border-2 transition ${pIdx === idx ? 'border-rose-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`;
-                thumb.onclick = () => {
-                    currentViewerIndex.photoIndex = pIdx;
-                    updateLightboxContent();
-                };
-                thumbContainer.appendChild(thumb);
-            });
-        }
-
-        function nextPhoto() {
-            const album = albums.find(a => a.id === currentViewerIndex.albumId);
-            if (!album) return;
-            currentViewerIndex.photoIndex = (currentViewerIndex.photoIndex + 1) % album.photos.length;
-            updateLightboxContent();
-        }
-
-        function prevPhoto() {
-            const album = albums.find(a => a.id === currentViewerIndex.albumId);
-            if (!album) return;
-            currentViewerIndex.photoIndex = (currentViewerIndex.photoIndex - 1 + album.photos.length) % album.photos.length;
-            updateLightboxContent();
-        }
-
-        // --- THEME DARK/LIGHT MODE ---
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            if (savedTheme === 'dark') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        }
-
-        function toggleTheme() {
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-
-        // --- TOAST NOTIFICATION ---
-        function showToast(msg, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toastMsg');
-            const toastIcon = document.getElementById('toastIcon');
-
-            toastMsg.textContent = msg;
-
-            if (type === 'success') {
-                toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
-            } else if (type === 'warning') {
-                toastIcon.className = "fa-solid fa-triangle-exclamation text-amber-400";
-            } else {
-                toastIcon.className = "fa-solid fa-circle-info text-sky-400";
-            }
-
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
-
-        // --- EVENT LISTENERS INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            initTheme();
-            initAvatarUploader();
-
-            // Load data
-            albums = await loadAlbumsFromDB();
-            renderAlbums();
-
-            // Theme toggle button
-            document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
-
-            // Modal open/close
-            document.getElementById('openAddModalBtn').addEventListener('click', openAddModal);
-            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-            document.getElementById('cancelModalBtn').addEventListener('click', closeModal);
-            document.getElementById('saveAlbumBtn').addEventListener('click', saveAlbum);
-
-            // Date input change preview
-            document.getElementById('albumDateInput').addEventListener('change', (e) => {
-                updateCalculatedAgePreview(e.target.value);
-            });
-
-            // File upload drag & drop
-            const dropZone = document.getElementById('dropZone');
-            const fileInput = document.getElementById('imageFileInput');
-
-            dropZone.addEventListener('click', () => fileInput.click());
-
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.classList.add('border-rose-500', 'bg-rose-100/50');
-            });
-
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.classList.remove('border-rose-500', 'bg-rose-100/50');
-            });
-
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('border-rose-500', 'bg-rose-100/50');
-                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    handleFilesSelected(e.dataTransfer.files);
-                }
-            });
-
-            fileInput.addEventListener('change', (e) => {
-                if (e.target.files && e.target.files.length > 0) {
-                    handleFilesSelected(e.target.files);
-                    fileInput.value = ''; // reset
-                }
-            });
-
-            // Lightbox navigation
-            document.getElementById('closeLightboxBtn').addEventListener('click', closeLightbox);
-            document.getElementById('nextPhotoBtn').addEventListener('click', nextPhoto);
-            document.getElementById('prevPhotoBtn').addEventListener('click', prevPhoto);
-
-            // Keyboard navigation for Lightbox & Modals
-            document.addEventListener('keydown', (e) => {
-                const lightbox = document.getElementById('lightbox');
-                if (!lightbox.classList.contains('hidden')) {
-                    if (e.key === 'Escape') closeLightbox();
-                    if (e.key === 'ArrowRight') nextPhoto();
-                    if (e.key === 'ArrowLeft') prevPhoto();
-                }
-            });
-
-            // Touch swipe gesture support for Lightbox
-            let touchStartX = 0;
-            let touchEndX = 0;
-            const lightboxMain = document.getElementById('lightbox');
-
-            lightboxMain.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].screenX;
-            }, { passive: true });
-
-            lightboxMain.addEventListener('touchend', (e) => {
-                touchEndX = e.changedTouches[0].screenX;
-                handleSwipe();
-            }, { passive: true });
-
-            function handleSwipe() {
-                const threshold = 50;
-                if (touchEndX < touchStartX - threshold) {
-                    nextPhoto(); // Swipe left -> Next
-                }
-                if (touchEndX > touchStartX + threshold) {
-                    prevPhoto(); // Swipe right -> Prev
-                }
-            }
+    <div class="lightbox-img-container">
+      <img id="lightbox-img" class="lightbox-img" src="" alt="Full view">
+    </div>
+  </div>
+
+  <!-- INPUT FILE ẨN -->
+  <input type="file" id="avatar-input" accept="image/*" onchange="changeAvatar(event)">
+  <input type="file" id="photos-input" accept="image/*" multiple onchange="handlePhotosSelect(event)">
+
+  <script>
+      // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmjZ-_WjdM934wTffiNuygAfk6L_qSJHg",
+    authDomain: "nhat-ky-cua-kem.firebaseapp.com",
+    projectId: "nhat-ky-cua-kem",
+    storageBucket: "nhat-ky-cua-kem.firebasestorage.app",
+    messagingSenderId: "306999711539",
+    appId: "1:306999711539:web:9f033c0213306e95495046",
+    measurementId: "G-BSZ19J28GR"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+
+    // NGÀY SINH BÉ KEM: 17/09/2025
+    const BABY_BIRTHDAY = new Date('2025-09-17');
+    
+    let albums = JSON.parse(localStorage.getItem('kem_albums')) || [];
+    let currentPhotos = [];
+    let editingId = null;
+    let activeLightboxPhotos = [];
+    let activeLightboxIndex = 0;
+    let currentTab = 'albums';
+
+    // ĐỒNG BỘ REALTIME TỪ FIREBASE CLOUD
+    function initRealtimeSync() {
+      db.collection("albums").onSnapshot((snapshot) => {
+        let firebaseAlbums = [];
+        snapshot.forEach((doc) => {
+          firebaseAlbums.push({ id: doc.id, ...doc.data() });
         });
-    </script>
+
+        if (firebaseAlbums.length > 0) {
+          albums = firebaseAlbums;
+          localStorage.setItem('kem_albums', JSON.stringify(albums));
+          renderAllTabs();
+        }
+      }, (error) => {
+        console.log("Đang chạy ở chế độ offline local:", error);
+        renderAllTabs();
+      });
+    }
+
+    // TÍNH TUỔI BÉ KEM
+    function calculateBabyAge(dateString) {
+      const targetDate = new Date(dateString);
+      let months = (targetDate.getFullYear() - BABY_BIRTHDAY.getFullYear()) * 12 + (targetDate.getMonth() - BABY_BIRTHDAY.getMonth());
+      let days = targetDate.getDate() - BABY_BIRTHDAY.getDate();
+
+      if (days < 0) {
+        months--;
+        const prevMonthLastDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), 0).getDate();
+        days += prevMonthLastDay;
+      }
+
+      if (months < 0) return 'Mới sinh';
+      return `${months} Tháng ${days} Ngày Tuổi`;
+    }
+
+    // CHUYỂN TAB CẢNH MÀN HÌNH
+    function switchTab(tabName) {
+      currentTab = tabName;
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+      if (tabName === 'albums') {
+        document.getElementById('tab-albums').classList.add('active');
+        document.getElementById('nav-albums').classList.add('active');
+        document.getElementById('topbar-subtext').innerText = 'Nguyễn Quỳnh Anh (Bé Kem) 💖';
+      } else if (tabName === 'photos') {
+        document.getElementById('tab-photos').classList.add('active');
+        document.getElementById('nav-photos').classList.add('active');
+        renderAllPhotosTab();
+      } else if (tabName === 'family') {
+        document.getElementById('tab-family').classList.add('active');
+        document.getElementById('nav-family').classList.add('active');
+        document.getElementById('topbar-subtext').innerText = 'Kỷ Niệm Gia Đình 🏡';
+      }
+    }
+
+    function renderAllTabs() {
+      renderBabyAlbums();
+      renderFamilyAlbums();
+      if (currentTab === 'photos') renderAllPhotosTab();
+    }
+
+    // RENDER TAB 1: ALBUM BÉ KEM
+    function renderBabyAlbums() {
+      const container = document.getElementById('tab-albums');
+      container.innerHTML = '';
+      const babyAlbums = albums.filter(a => !a.type || a.type === 'baby');
+
+      babyAlbums.forEach(album => {
+        const ageText = calculateBabyAge(album.date);
+        const formattedDate = new Date(album.date).toLocaleDateString('vi-VN');
+        const photoCount = album.photos.length;
+
+        let gridHtml = '';
+        const displayPhotos = album.photos.slice(0, 6);
+        displayPhotos.forEach((photo, idx) => {
+          const isLast = idx === 5 && photoCount > 6;
+          gridHtml += `
+            <div class="photo-item" onclick="openLightboxPhotos('${album.id}', ${idx})">
+              <img src="${photo}" alt="Ảnh bé Kem">
+              ${isLast ? `<div class="more-overlay">+${photoCount - 6}<span>${photoCount} ảnh</span></div>` : ''}
+            </div>
+          `;
+        });
+
+        const card = document.createElement('div');
+        card.className = 'album-card';
+        card.innerHTML = `
+          <div class="album-header">
+            <div class="age-badge"><i class="fa-solid fa-heart"></i> ${ageText}</div>
+            <div class="album-date"><i class="fa-regular fa-calendar"></i> ${formattedDate}</div>
+          </div>
+          ${album.title ? `<div class="album-title">${album.title}</div>` : ''}
+          <div class="photo-grid">${gridHtml}</div>
+          <div class="album-footer">
+            <button class="btn-icon" onclick="editAlbum('${album.id}')"><i class="fa-solid fa-pen-to-square"></i> Sửa</button>
+            <button class="btn-icon" onclick="deleteAlbum('${album.id}')" style="color:#d80032;"><i class="fa-solid fa-trash"></i> Xóa</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // RENDER TAB 3: ALBUM GIA ĐÌNH
+    function renderFamilyAlbums() {
+      const container = document.getElementById('tab-family');
+      container.innerHTML = '';
+      const familyAlbums = albums.filter(a => a.type === 'family');
+
+      familyAlbums.forEach(album => {
+        const formattedDate = new Date(album.date).toLocaleDateString('vi-VN');
+        const photoCount = album.photos.length;
+
+        let gridHtml = '';
+        const displayPhotos = album.photos.slice(0, 6);
+        displayPhotos.forEach((photo, idx) => {
+          const isLast = idx === 5 && photoCount > 6;
+          gridHtml += `
+            <div class="photo-item" onclick="openLightboxPhotos('${album.id}', ${idx})">
+              <img src="${photo}" alt="Ảnh gia đình">
+              ${isLast ? `<div class="more-overlay">+${photoCount - 6}<span>${photoCount} ảnh</span></div>` : ''}
+            </div>
+          `;
+        });
+
+        const card = document.createElement('div');
+        card.className = 'album-card';
+        card.innerHTML = `
+          <div class="album-header">
+            <div class="family-badge"><i class="fa-solid fa-house-chimney"></i> Gia Đình</div>
+            <div class="album-date"><i class="fa-regular fa-calendar"></i> ${formattedDate}</div>
+          </div>
+          ${album.title ? `<div class="album-title">${album.title}</div>` : ''}
+          <div class="photo-grid">${gridHtml}</div>
+          <div class="album-footer">
+            <button class="btn-icon" onclick="editAlbum('${album.id}')"><i class="fa-solid fa-pen-to-square"></i> Sửa</button>
+            <button class="btn-icon" onclick="deleteAlbum('${album.id}')" style="color:#d80032;"><i class="fa-solid fa-trash"></i> Xóa</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // RENDER TAB 2: TOÀN BỘ ẢNH BÉ KEM
+    function renderAllPhotosTab() {
+      const container = document.getElementById('tab-photos');
+      container.innerHTML = '';
+      const babyAlbums = albums.filter(a => !a.type || a.type === 'baby');
+      const sortedAlbums = [...babyAlbums].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      sortedAlbums.forEach(album => {
+        const section = document.createElement('div');
+        section.className = 'all-photos-section';
+        section.dataset.date = album.date;
+        section.dataset.age = calculateBabyAge(album.date);
+
+        const dateHeader = `
+          <div class="section-date-header">
+            <span>📅 ${new Date(album.date).toLocaleDateString('vi-VN')}</span>
+            <span>👶 ${calculateBabyAge(album.date)}</span>
+          </div>
+        `;
+
+        let photosGrid = '<div class="all-photos-grid">';
+        album.photos.forEach((photo) => {
+          photosGrid += `
+            <div class="photo-item" onclick="openLightboxDirect('${photo}')">
+              <img src="${photo}" alt="Ảnh bé Kem">
+            </div>
+          `;
+        });
+        photosGrid += '</div>';
+
+        section.innerHTML = dateHeader + photosGrid;
+        container.appendChild(section);
+      });
+
+      window.removeEventListener('scroll', handleScrollTopBar);
+      window.addEventListener('scroll', handleScrollTopBar);
+      handleScrollTopBar();
+    }
+
+    function handleScrollTopBar() {
+      if (currentTab !== 'photos') return;
+      const sections = document.querySelectorAll('.all-photos-section');
+      let currentSection = null;
+
+      sections.forEach(sec => {
+        const rect = sec.getBoundingClientRect();
+        if (rect.top <= 120 && rect.bottom >= 100) {
+          currentSection = sec;
+        }
+      });
+
+      if (currentSection) {
+        const dateStr = new Date(currentSection.dataset.date).toLocaleDateString('vi-VN');
+        const ageStr = currentSection.dataset.age;
+        document.getElementById('topbar-subtext').innerText = `📅 ${dateStr} (${ageStr})`;
+      }
+    }
+
+    // MODAL HANDLERS
+    function openModal(isEdit = false) {
+      document.getElementById('album-modal').classList.add('active');
+      if (!isEdit) {
+        editingId = null;
+        document.getElementById('modal-title-text').innerText = 'Thêm Kỷ Niệm Mới';
+        document.getElementById('album-type-input').value = currentTab === 'family' ? 'family' : 'baby';
+        document.getElementById('album-date-input').value = new Date().toISOString().split('T')[0];
+        document.getElementById('album-title-input').value = '';
+        currentPhotos = [];
+        renderPreviews();
+        updateAgePreview();
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('album-modal').classList.remove('active');
+    }
+
+    function updateAgePreview() {
+      const type = document.getElementById('album-type-input').value;
+      const dateVal = document.getElementById('album-date-input').value;
+      const previewEl = document.getElementById('age-preview');
+
+      if (type === 'baby' && dateVal) {
+        previewEl.innerText = '👶 Tuổi bé Kem khi chụp: ' + calculateBabyAge(dateVal);
+      } else {
+        previewEl.innerText = '🏡 Album Kỷ Niệm Gia Đình';
+      }
+    }
+
+    function handlePhotosSelect(e) {
+      const files = Array.from(e.target.files);
+      files.forEach(file => {
+        if (currentPhotos.length < 10) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            currentPhotos.push(event.target.result);
+            renderPreviews();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    function renderPreviews() {
+      const container = document.getElementById('preview-list');
+      container.innerHTML = '';
+      currentPhotos.forEach((photo, idx) => {
+        container.innerHTML += `
+          <div class="preview-item">
+            <img src="${photo}">
+            <button class="preview-remove" onclick="removePreview(${idx})">✕</button>
+          </div>
+        `;
+      });
+    }
+
+    function removePreview(idx) {
+      currentPhotos.splice(idx, 1);
+      renderPreviews();
+    }
+
+    // LƯU KỶ NIỆM (ĐỒNG BỘ ĐÁM MÂY)
+    async function saveAlbum(e) {
+      e.preventDefault();
+      if (currentPhotos.length === 0) {
+        alert('Vui lòng chọn ít nhất 1 bức ảnh!');
+        return;
+      }
+
+      document.getElementById('loading').classList.add('active');
+
+      const type = document.getElementById('album-type-input').value;
+      const date = document.getElementById('album-date-input').value;
+      const title = document.getElementById('album-title-input').value;
+
+      const albumData = {
+        type,
+        date,
+        title,
+        photos: currentPhotos,
+        updatedAt: new Date().toISOString()
+      };
+
+      try {
+        if (editingId) {
+          await db.collection("albums").doc(editingId).set(albumData, { merge: true });
+        } else {
+          const newDoc = await db.collection("albums").add(albumData);
+          albumData.id = newDoc.id;
+        }
+
+        // Cập nhật bộ nhớ Local
+        const index = albums.findIndex(a => a.id === editingId);
+        if (index !== -1) {
+          albums[index] = { id: editingId, ...albumData };
+        } else {
+          albums.unshift({ id: albumData.id || Date.now().toString(), ...albumData });
+        }
+
+        localStorage.setItem('kem_albums', JSON.stringify(albums));
+        renderAllTabs();
+        closeModal();
+      } catch (err) {
+        console.error("Lỗi đồng bộ Firebase:", err);
+        // Fallback lưu local nếu mất mạng
+        localStorage.setItem('kem_albums', JSON.stringify(albums));
+        renderAllTabs();
+        closeModal();
+      } finally {
+        document.getElementById('loading').classList.remove('active');
+      }
+    }
+
+    function editAlbum(id) {
+      const album = albums.find(a => a.id === id);
+      if (!album) return;
+      editingId = id;
+      document.getElementById('modal-title-text').innerText = 'Chỉnh Sửa Kỷ Niệm';
+      document.getElementById('album-type-input').value = album.type || 'baby';
+      document.getElementById('album-date-input').value = album.date;
+      document.getElementById('album-title-input').value = album.title || '';
+      currentPhotos = [...album.photos];
+      renderPreviews();
+      updateAgePreview();
+      openModal(true);
+    }
+
+    async function deleteAlbum(id) {
+      if (confirm('Bạn có chắc chắn muốn xóa kỷ niệm này không?')) {
+        document.getElementById('loading').classList.add('active');
+        try {
+          await db.collection("albums").doc(id).delete();
+        } catch (err) {
+          console.log("Xóa offline local");
+        }
+        albums = albums.filter(a => a.id !== id);
+        localStorage.setItem('kem_albums', JSON.stringify(albums));
+        renderAllTabs();
+        document.getElementById('loading').classList.remove('active');
+      }
+    }
+
+    // ĐỔI AVATAR VÀ THEME
+    function changeAvatar(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          document.getElementById('baby-avatar').src = event.target.result;
+          localStorage.setItem('kem_avatar', event.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function toggleTheme() {
+      const body = document.documentElement;
+      const current = body.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      body.setAttribute('data-theme', next);
+      localStorage.setItem('kem_theme', next);
+      document.getElementById('theme-btn').innerHTML = next === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    }
+
+    // LIGHTBOX FULLSCREEN
+    function openLightboxPhotos(albumId, photoIdx) {
+      const album = albums.find(a => a.id === albumId);
+      if (!album) return;
+      activeLightboxPhotos = album.photos;
+      activeLightboxIndex = photoIdx;
+      updateLightbox();
+      document.getElementById('lightbox').classList.add('active');
+    }
+
+    function openLightboxDirect(photoUrl) {
+      activeLightboxPhotos = [photoUrl];
+      activeLightboxIndex = 0;
+      updateLightbox();
+      document.getElementById('lightbox').classList.add('active');
+    }
+
+    function updateLightbox() {
+      document.getElementById('lightbox-img').src = activeLightboxPhotos[activeLightboxIndex];
+      document.getElementById('lightbox-counter').innerText = `${activeLightboxIndex + 1} / ${activeLightboxPhotos.length}`;
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+    }
+
+    // INIT APP
+    window.onload = () => {
+      const savedAvatar = localStorage.getItem('kem_avatar');
+      if (savedAvatar) document.getElementById('baby-avatar').src = savedAvatar;
+
+      const savedTheme = localStorage.getItem('kem_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById('theme-btn').innerHTML = savedTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+
+      renderAllTabs();
+      initRealtimeSync();
+    };
+  </script>
 </body>
 </html>
