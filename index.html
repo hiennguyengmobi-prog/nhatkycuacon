@@ -750,27 +750,22 @@
   <input type="file" id="photos-input" accept="image/*" multiple onchange="handlePhotosSelect(event)">
 
   <script>
-      // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+    // 1. CẤU HÌNH FIREBASE THỰC TẾ CỦA BẠN
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmjZ-_WjdM934wTffiNuygAfk6L_qSJHg",
+      authDomain: "nhat-ky-cua-kem.firebaseapp.com",
+      projectId: "nhat-ky-cua-kem",
+      storageBucket: "nhat-ky-cua-kem.firebasestorage.app",
+      messagingSenderId: "306999711539",
+      appId: "1:306999711539:web:9f033c0213306e95495046",
+      measurementId: "G-BSZ19J28GR"
+    };
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyAmjZ-_WjdM934wTffiNuygAfk6L_qSJHg",
-    authDomain: "nhat-ky-cua-kem.firebaseapp.com",
-    projectId: "nhat-ky-cua-kem",
-    storageBucket: "nhat-ky-cua-kem.firebasestorage.app",
-    messagingSenderId: "306999711539",
-    appId: "1:306999711539:web:9f033c0213306e95495046",
-    measurementId: "G-BSZ19J28GR"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
+    // Khởi tạo Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
 
     // NGÀY SINH BÉ KEM: 17/09/2025
     const BABY_BIRTHDAY = new Date('2025-09-17');
@@ -1089,7 +1084,6 @@
         closeModal();
       } catch (err) {
         console.error("Lỗi đồng bộ Firebase:", err);
-        // Fallback lưu local nếu mất mạng
         localStorage.setItem('kem_albums', JSON.stringify(albums));
         renderAllTabs();
         closeModal();
