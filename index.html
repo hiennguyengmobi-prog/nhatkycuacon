@@ -17,6 +17,9 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  
+  <!-- Google Identity Services cho Google Photos -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <style>
     :root {
@@ -172,8 +175,29 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       flex-shrink: 0;
+    }
+
+    .btn-gphotos {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-gphotos.connected {
+      border-color: #4285f4;
+      color: #4285f4;
+      background-color: rgba(66, 133, 244, 0.1);
     }
 
     .theme-toggle {
@@ -659,6 +683,10 @@
       </div>
       
       <div class="header-actions">
+        <!-- NÚT ĐĂNG NHẬP GOOGLE PHOTOS -->
+        <button class="btn-gphotos" id="gphotos-btn" onclick="handleGoogleAuth()">
+          <i class="fa-brands fa-google"></i> <span id="gphotos-text">Photos</span>
+        </button>
         <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">
           <i class="fa-solid fa-moon"></i>
         </button>
@@ -757,15 +785,14 @@
   <input type="file" id="photos-input" accept="image/*" multiple onchange="handlePhotosSelect(event)">
 
   <script>
-    // 1. CẤU HÌNH FIREBASE THỰC TẾ CỦA BẠN
+    // 1. CẤU HÌNH FIREBASE THỰC TẾ
     const firebaseConfig = {
-      apiKey: "AIzaSyAmjZ-_WjdM934wTffiNuygAfk6L_qSJHg",
-      authDomain: "nhat-ky-cua-kem.firebaseapp.com",
-      projectId: "nhat-ky-cua-kem",
-      storageBucket: "nhat-ky-cua-kem.firebasestorage.app",
-      messagingSenderId: "306999711539",
-      appId: "1:306999711539:web:9f033c0213306e95495046",
-      measurementId: "G-BSZ19J28GR"
+      apiKey: "AIzaSyBL0Y4Xx1uK66yrkqKSWqrV08p9e3mQNYk",
+      authDomain: "nhat-ky-cua-con-2d9bd.firebaseapp.com",
+      projectId: "nhat-ky-cua-con-2d9bd",
+      storageBucket: "nhat-ky-cua-con-2d9bd.firebasestorage.app",
+      messagingSenderId: "122885956029",
+      appId: "1:122885956029:web:42520014df6cb198cf72d4"
     };
 
     if (!firebase.apps.length) {
@@ -773,17 +800,24 @@
     }
     const db = firebase.firestore();
 
+    // 2. CẤU HÌNH GOOGLE PHOTOS CLIENT ID
+    const GOOGLE_CLIENT_ID = '360813261184-99qsvc5ik8du6jdpf7bu55upljdhqukt.apps.googleusercontent.com'; // <-- THAY MÃ CLIENT ID CỦA BẠN VÀO ĐÂY
+    let googleAccessToken = localStorage.getItem('gphotos_token') || null;
+    let tokenClient = null;
+    let googleAlbumId = localStorage.getItem('gphotos_album_id') || null;
+
     const BABY_BIRTHDAY = new Date('2025-09-17');
     
     let albums = JSON.parse(localStorage.getItem('kem_albums')) || [];
     let currentPhotos = [];
+    let rawPhotoFiles = []; // Lưu trữ File nhị phân gốc phục vụ đẩy lên Google Photos
     let editingId = null;
     let activeLightboxPhotos = [];
     let activeLightboxIndex = 0;
     let currentTab = 'albums';
 
-    // BỘ NÉN ẢNH SIÊU TỐC ĐỘ ĐẢM BẢO KHÔNG VƯỢT QUÁ GIỚI HẠN 1MB FIRESTORE
-    function compressImage(file, maxWidth = 800, quality = 0.6) {
+    // BỘ NÉN ẢNH VẪN DÙNG ĐỂ NẠP BẢN SAO CHO FIRESTORE
+    function compressImage(file, maxWidth = 800, quality = 0.55) {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -811,9 +845,141 @@
       });
     }
 
-    // ĐỒNG BỘ REALTIME TỪ FIREBASE (GỒM CẢ ALBUM VÀ AVATAR)
+    // ==========================================
+    // LOGIC KẾT NỐI VÀ TẢI ẢNH LÊN GOOGLE PHOTOS
+    // ==========================================
+    function initGoogleAuth() {
+      if (typeof google === 'undefined') return;
+      
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/photoslibrary.appendonly https://www.googleapis.com/auth/photoslibrary.sharing',
+        callback: (response) => {
+          if (response.access_token) {
+            googleAccessToken = response.access_token;
+            localStorage.setItem('gphotos_token', googleAccessToken);
+            updateGoogleAuthUI(true);
+            ensureGooglePhotosAlbum();
+          }
+        },
+      });
+
+      if (googleAccessToken) {
+        updateGoogleAuthUI(true);
+      }
+    }
+
+    function handleGoogleAuth() {
+      if (!tokenClient) {
+        initGoogleAuth();
+      }
+      if (tokenClient) {
+        tokenClient.requestAccessToken();
+      } else {
+        alert("Thư viện Google API đang tải, bạn hãy thử lại sau vài giây nhé.");
+      }
+    }
+
+    function updateGoogleAuthUI(isConnected) {
+      const btn = document.getElementById('gphotos-btn');
+      const text = document.getElementById('gphotos-text');
+      if (isConnected) {
+        btn.classList.add('connected');
+        text.innerText = 'Đã nối Photos';
+      } else {
+        btn.classList.remove('connected');
+        text.innerText = 'Photos';
+      }
+    }
+
+    // Tự động tìm hoặc tạo Album "Nhật Ký Của Con - Bé Kem" trên Google Photos
+    async function ensureGooglePhotosAlbum() {
+      if (!googleAccessToken || googleAlbumId) return googleAlbumId;
+
+      try {
+        const res = await fetch('https://photoslibrary.googleapis.com/v1/albums', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${googleAccessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            album: { title: "Nhật Ký Của Con - Bé Kem" }
+          })
+        });
+        const data = await res.json();
+        if (data.id) {
+          googleAlbumId = data.id;
+          localStorage.setItem('gphotos_album_id', googleAlbumId);
+        }
+      } catch (err) {
+        console.error("Lỗi tạo album Google Photos:", err);
+      }
+      return googleAlbumId;
+    }
+
+    // Upload từng file ảnh lên Google Photos Library API
+    async function uploadSingleFileToGooglePhotos(file) {
+      if (!googleAccessToken) return null;
+
+      try {
+        // 1. Upload byte dữ liệu để lấy Upload Token
+        const uploadRes = await fetch('https://photoslibrary.googleapis.com/v1/uploads', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${googleAccessToken}`,
+            'Content-type': 'application/octet-stream',
+            'X-Goog-Upload-Content-Type': file.type || 'image/jpeg',
+            'X-Goog-Upload-Protocol': 'raw',
+          },
+          body: file
+        });
+
+        if (!uploadRes.ok) return null;
+        const uploadToken = await uploadRes.text();
+
+        // 2. Tạo Media Item chính thức gắn vào Album
+        const albumId = await ensureGooglePhotosAlbum();
+        const createBody = {
+          newMediaItems: [
+            {
+              description: "Ảnh kỷ niệm bé Kem tải từ ứng dụng Nhật Ký Của Con",
+              simpleMediaItem: { uploadToken: uploadToken }
+            }
+          ]
+        };
+
+        if (albumId) {
+          createBody.albumId = albumId;
+        }
+
+        const createRes = await fetch('https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${googleAccessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(createBody)
+        });
+
+        return await createRes.json();
+      } catch (err) {
+        console.error("Lỗi đẩy ảnh lên Google Photos:", err);
+        return null;
+      }
+    }
+
+    async function syncFilesToGooglePhotos(files) {
+      if (!googleAccessToken || !files || files.length === 0) return;
+      for (let file of files) {
+        await uploadSingleFileToGooglePhotos(file);
+      }
+    }
+
+    // ==========================================
+    // CÁC HÀM XỬ LÝ GIAO DIỆN & FIREBASE CHÍNH
+    // ==========================================
     function initRealtimeSync() {
-      // 1. Đồng bộ Albums
       db.collection("albums").onSnapshot((snapshot) => {
         let firebaseAlbums = [];
         snapshot.forEach((doc) => {
@@ -832,7 +998,6 @@
         renderAllTabs();
       });
 
-      // 2. Đồng bộ Avatar chung của bé từ Firebase
       db.collection("settings").doc("app_config").onSnapshot((doc) => {
         if (doc.exists && doc.data().avatarUrl) {
           const cloudAvatar = doc.data().avatarUrl;
@@ -1053,6 +1218,7 @@
         document.getElementById('album-date-input').value = new Date().toISOString().split('T')[0];
         document.getElementById('album-title-input').value = '';
         currentPhotos = [];
+        rawPhotoFiles = [];
         renderPreviews();
         updateAgePreview();
       }
@@ -1083,6 +1249,7 @@
 
       for (let file of files) {
         if (currentPhotos.length < 8) {
+          rawPhotoFiles.push(file); // Lưu file nhị phân đẩy lên Google Photos
           const compressedBase64 = await compressImage(file, 800, 0.55);
           currentPhotos.push(compressedBase64);
         }
@@ -1107,6 +1274,9 @@
 
     function removePreview(idx) {
       currentPhotos.splice(idx, 1);
+      if (rawPhotoFiles[idx]) {
+        rawPhotoFiles.splice(idx, 1);
+      }
       renderPreviews();
     }
 
@@ -1118,7 +1288,7 @@
       }
 
       document.getElementById('loading').classList.add('active');
-      document.getElementById('loading-msg').innerText = "Đang đồng bộ lên Firebase...";
+      document.getElementById('loading-msg').innerText = "Đang đồng bộ lên Firebase & Google Photos...";
 
       const type = document.getElementById('album-type-input').value;
       const date = document.getElementById('album-date-input').value;
@@ -1133,16 +1303,22 @@
       };
 
       try {
+        // 1. Lưu vào Firebase Firestore
         if (editingId) {
           await db.collection("albums").doc(editingId).set(albumData, { merge: true });
         } else {
           await db.collection("albums").add(albumData);
         }
 
+        // 2. Tự động đồng bộ các file ảnh gốc sang Google Photos (nếu đã kết nối)
+        if (googleAccessToken && rawPhotoFiles.length > 0) {
+          await syncFilesToGooglePhotos(rawPhotoFiles);
+        }
+
         closeModal();
       } catch (err) {
         console.error("Lỗi Firestore:", err);
-        alert("Lỗi: Tổng dung lượng ảnh trong album vượt quá 1MB. Bạn hãy chọn ít ảnh hơn trong 1 lần đăng nhé!");
+        alert("Có lỗi xảy ra trong quá trình lưu kỷ niệm: " + err.message);
       } finally {
         document.getElementById('loading').classList.remove('active');
       }
@@ -1157,6 +1333,7 @@
       document.getElementById('album-date-input').value = album.date;
       document.getElementById('album-title-input').value = album.title || '';
       currentPhotos = [...album.photos];
+      rawPhotoFiles = [];
       renderPreviews();
       updateAgePreview();
       openModal(true);
@@ -1175,7 +1352,6 @@
       }
     }
 
-    // ĐỔI VÀ ĐỒNG BỘ AVATAR LÊN FIREBASE CLOUD
     async function changeAvatar(e) {
       const file = e.target.files[0];
       if (file) {
@@ -1185,13 +1361,16 @@
         const compressedAvatar = await compressImage(file, 300, 0.7);
         
         try {
-          // Lưu thẳng lên Cloud Firestore để các thiết bị khác tự động cập nhật theo
           await db.collection("settings").doc("app_config").set({
             avatarUrl: compressedAvatar
           }, { merge: true });
 
           document.getElementById('baby-avatar').src = compressedAvatar;
           localStorage.setItem('kem_avatar', compressedAvatar);
+
+          if (googleAccessToken) {
+            await uploadSingleFileToGooglePhotos(file);
+          }
         } catch (err) {
           console.error("Lỗi đổi avatar:", err);
           alert("Không thể lưu avatar lên cloud: " + err.message);
@@ -1244,6 +1423,7 @@
       document.getElementById('theme-btn').innerHTML = savedTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
 
       initRealtimeSync();
+      setTimeout(initGoogleAuth, 1000);
     };
   </script>
 </body>
