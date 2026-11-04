@@ -172,6 +172,68 @@
       transition: all 0.2s ease;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-gphotos {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-gphotos.connected {
+      border-color: #4285f4;
+      color: #4285f4;
+      background-color: rgba(66, 133, 244, 0.1);
+    }
+
+    .theme-toggle {
+      width: 38px;
+      height: 38px;
+      aspect-ratio: 1/1;
+      flex-shrink: 0;
+      border-radius: 50%;
+      border: none;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px var(--border-color);
+    }
+
+    .btn-add {
+      background: linear-gradient(135deg, var(--primary-color), #ff758f);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(255, 71, 126, 0.3);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
     /* BOTTOM NAVBAR (3 TAB) */
     .bottom-nav {
       position: fixed;
@@ -703,6 +765,7 @@
   </div>
 
   <!-- HEADER TOPBAR CỐ ĐỊNH -->
+  <!-- HEADER TOPBAR CỐ ĐỊNH -->
   <header class="sticky-topbar">
     <div class="topbar-content">
       <div class="app-branding">
@@ -845,7 +908,7 @@
     const db = firebase.firestore();
 
     // 2. CẤU HÌNH GOOGLE PHOTOS CLIENT ID
-    const GOOGLE_CLIENT_ID = '360813261184-99qsvc5ik8du6jdpf7bu55upljdhqukt.apps.googleusercontent.com';
+    const GOOGLE_CLIENT_ID = '360813261184-99qsvc5ik8du6jdpf7bu55upljdhqukt.apps.googleusercontent.com'; // <-- THAY MÃ CLIENT ID CỦA BẠN VÀO ĐÂY
     let googleAccessToken = localStorage.getItem('gphotos_token') || null;
     let tokenClient = null;
     let googleAlbumId = localStorage.getItem('gphotos_album_id') || null;
@@ -854,12 +917,13 @@
     
     let albums = JSON.parse(localStorage.getItem('kem_albums')) || [];
     let currentPhotos = [];
-    let rawPhotoFiles = [];
+    let rawPhotoFiles = []; // Lưu trữ File nhị phân gốc phục vụ đẩy lên Google Photos
     let editingId = null;
     let activeLightboxPhotos = [];
     let activeLightboxIndex = 0;
     let currentTab = 'albums';
 
+    // BỘ NÉN ẢNH VẪN DÙNG ĐỂ NẠP BẢN SAO CHO FIRESTORE
     function compressImage(file, maxWidth = 800, quality = 0.55) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -888,6 +952,9 @@
       });
     }
 
+    // ==========================================
+    // LOGIC KẾT NỐI VÀ TẢI ẢNH LÊN GOOGLE PHOTOS
+    // ==========================================
     function initGoogleAuth() {
       if (typeof google === 'undefined') return;
       
@@ -932,6 +999,7 @@
       }
     }
 
+    // Tự động tìm hoặc tạo Album "Nhật Ký Của Con - Bé Kem" trên Google Photos
     async function ensureGooglePhotosAlbum() {
       if (!googleAccessToken || googleAlbumId) return googleAlbumId;
 
@@ -957,10 +1025,12 @@
       return googleAlbumId;
     }
 
+    // Upload từng file ảnh lên Google Photos Library API
     async function uploadSingleFileToGooglePhotos(file) {
       if (!googleAccessToken) return null;
 
       try {
+        // 1. Upload byte dữ liệu để lấy Upload Token
         const uploadRes = await fetch('https://photoslibrary.googleapis.com/v1/uploads', {
           method: 'POST',
           headers: {
@@ -975,6 +1045,7 @@
         if (!uploadRes.ok) return null;
         const uploadToken = await uploadRes.text();
 
+        // 2. Tạo Media Item chính thức gắn vào Album
         const albumId = await ensureGooglePhotosAlbum();
         const createBody = {
           newMediaItems: [
@@ -999,13 +1070,17 @@
         });
 
         const resultData = await createRes.json();
-        if (!createRes.ok) {
-          console.error("Lỗi Google Photos trả về:", resultData);
-        } else {
-          console.log("Đẩy ảnh lên Google Photos thành công:", resultData);
-        }
+        
+          // Thêm đoạn kiểm tra này để soi lỗi chi tiết từ Google trả về
+          if (!createRes.ok) {
+            console.error("Lỗi Google Photos trả về:", resultData);
+          } else {
+            console.log("Đẩy ảnh lên Google Photos thành công:", resultData);
+          }
 
         return resultData;
+
+        return await createRes.json();
       } catch (err) {
         console.error("Lỗi đẩy ảnh lên Google Photos:", err);
         return null;
@@ -1014,6 +1089,8 @@
 
     async function syncFilesToGooglePhotos(files) {
       if (!googleAccessToken || !files || files.length === 0) return;
+      
+      // Dùng Promise.allSettled để các ảnh upload độc lập, tránh lỗi 1 ảnh làm hỏng cả tiến trình
       const uploadPromises = files.map(file => uploadSingleFileToGooglePhotos(file));
       try {
         await Promise.allSettled(uploadPromises);
@@ -1023,6 +1100,9 @@
       }
     }
 
+    // ==========================================
+    // CÁC HÀM XỬ LÝ GIAO DIỆN & FIREBASE CHÍNH
+    // ==========================================
     function initRealtimeSync() {
       db.collection("albums").onSnapshot((snapshot) => {
         let firebaseAlbums = [];
@@ -1081,7 +1161,6 @@
       } else if (tabName === 'photos') {
         document.getElementById('tab-photos').classList.add('active');
         document.getElementById('nav-photos').classList.add('active');
-        document.getElementById('topbar-subtext').innerText = 'Nguyễn Quỳnh Anh (Bé Kem) 💖'; // Giữ nguyên tên
         renderAllPhotosTab();
       } else if (tabName === 'family') {
         document.getElementById('tab-family').classList.add('active');
@@ -1229,10 +1308,29 @@
         section.innerHTML = dateHeader + photosGrid;
         container.appendChild(section);
       });
+
+      window.removeEventListener('scroll', handleScrollTopBar);
+      window.addEventListener('scroll', handleScrollTopBar);
+      handleScrollTopBar();
     }
 
     function handleScrollTopBar() {
-      // Đã loại bỏ cập nhật ngày hiện tại trên header bộ ảnh
+      if (currentTab !== 'photos') return;
+      const sections = document.querySelectorAll('.all-photos-section');
+      let currentSection = null;
+
+      sections.forEach(sec => {
+        const rect = sec.getBoundingClientRect();
+        if (rect.top <= 120 && rect.bottom >= 100) {
+          currentSection = sec;
+        }
+      });
+
+      if (currentSection) {
+        const dateStr = new Date(currentSection.dataset.date).toLocaleDateString('vi-VN');
+        const ageStr = currentSection.dataset.age;
+        document.getElementById('topbar-subtext').innerText = `(${ageStr})`;
+      }
     }
 
     function openModal(isEdit = false) {
@@ -1275,7 +1373,7 @@
 
       for (let file of files) {
         if (currentPhotos.length < 8) {
-          rawPhotoFiles.push(file);
+          rawPhotoFiles.push(file); // Lưu file nhị phân đẩy lên Google Photos
           const compressedBase64 = await compressImage(file, 800, 0.55);
           currentPhotos.push(compressedBase64);
         }
@@ -1329,20 +1427,27 @@
       };
 
       try {
+        // 1. Lưu vào Firebase Firestore trước (Cực kỳ nhanh và ổn định)
         if (editingId) {
           await db.collection("albums").doc(editingId).set(albumData, { merge: true });
         } else {
           await db.collection("albums").add(albumData);
         }
 
+        // 2. Tắt ngay bảng loading và đóng modal để trải nghiệm mượt mà
         document.getElementById('loading').classList.remove('active');
         closeModal();
 
+        // 3. Đẩy ảnh gốc lên Google Photos ngầm ở phía sau (không chặn giao diện)
         if (googleAccessToken && rawPhotoFiles.length > 0) {
-          syncFilesToGooglePhotos(rawPhotoFiles).catch(err => {
+          console.log("Bắt đầu đồng bộ ngầm ảnh lên Google Photos...");
+          syncFilesToGooglePhotos(rawPhotoFiles).then(() => {
+            console.log("Đồng bộ Google Photos ngầm hoàn tất!");
+          }).catch(err => {
             console.error("Lỗi đồng bộ ngầm Google Photos:", err);
           });
         }
+
       } catch (err) {
         console.error("Lỗi Firestore:", err);
         alert("Có lỗi xảy ra trong quá trình lưu kỷ niệm: " + err.message);
