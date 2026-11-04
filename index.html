@@ -962,6 +962,17 @@
           body: JSON.stringify(createBody)
         });
 
+        const resultData = await createRes.json();
+        
+          // Thêm đoạn kiểm tra này để soi lỗi chi tiết từ Google trả về
+          if (!createRes.ok) {
+            console.error("Lỗi Google Photos trả về:", resultData);
+          } else {
+            console.log("Đẩy ảnh lên Google Photos thành công:", resultData);
+          }
+
+        return resultData;
+
         return await createRes.json();
       } catch (err) {
         console.error("Lỗi đẩy ảnh lên Google Photos:", err);
