@@ -655,6 +655,105 @@
       color: var(--primary-color);
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* ==========================================
+       1. CẤU HÌNH MẶC ĐỊNH CHO PC (GIỮ NGUYÊN)
+       ========================================== */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-gphotos {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-gphotos.connected {
+      border-color: #4285f4;
+      color: #4285f4;
+      background-color: rgba(66, 133, 244, 0.1);
+    }
+
+    /* Nút Thêm trên PC */
+    .btn-add-desktop {
+      background: linear-gradient(135deg, var(--primary-color), #ff758f);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(255, 71, 126, 0.3);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Nút FAB (+) nổi góc dưới dành riêng cho Mobile (Ẩn trên PC) */
+    .btn-add-fab {
+      display: none;
+    }
+
+    /* ==========================================
+       2. CẤU HÌNH DÀNH RIÊNG CHO MOBILE (< 768px)
+       ========================================== */
+    @media (max-width: 768px) {
+      /* Ẩn nút Thêm trên topbar khi ở mobile */
+      .btn-add-desktop {
+        display: none !important;
+      }
+
+      /* Hiện nút Thêm tròn nổi góc dưới bên phải trên Mobile */
+      .btn-add-fab {
+        display: flex;
+        position: fixed;
+        bottom: calc(var(--navbar-height) + 16px);
+        right: 16px;
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), #ff758f);
+        color: white;
+        border: none;
+        font-size: 22px;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(255, 71, 126, 0.4);
+        z-index: 950;
+        transition: transform 0.2s ease;
+      }
+
+      .btn-add-fab:active {
+        transform: scale(0.9);
+      }
+
+      /* Đưa nút Photos nằm cạnh nút DarkMode trên Mobile */
+      .header-actions {
+        gap: 6px;
+      }
+
+      .btn-gphotos {
+        padding: 5px 8px;
+        font-size: 11px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -665,6 +764,7 @@
     <div class="loading-text" id="loading-msg">Đang xử lý...</div>
   </div>
 
+  <!-- HEADER TOPBAR CỐ ĐỊNH -->
   <!-- HEADER TOPBAR CỐ ĐỊNH -->
   <header class="sticky-topbar">
     <div class="topbar-content">
@@ -683,19 +783,26 @@
       </div>
       
       <div class="header-actions">
-        <!-- NÚT ĐĂNG NHẬP GOOGLE PHOTOS -->
+        <!-- NÚT GOOGLE PHOTOS -->
         <button class="btn-gphotos" id="gphotos-btn" onclick="handleGoogleAuth()">
           <i class="fa-brands fa-google"></i> <span id="gphotos-text">Photos</span>
         </button>
+        <!-- NÚT DARKMODE -->
         <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">
           <i class="fa-solid fa-moon"></i>
         </button>
-        <button class="btn-add" onclick="openModal()">
+        <!-- NÚT THÊM DÀNH CHO PC -->
+        <button class="btn-add-desktop" onclick="openModal()">
           <i class="fa-solid fa-plus"></i> Thêm
         </button>
       </div>
     </div>
   </header>
+
+  <!-- NÚT THÊM (+) DẠNG TRÒN NỔI GÓC DƯỚI BÊN PHẢI (CHỈ HIỆN TRÊN MOBILE) -->
+  <button class="btn-add-fab" onclick="openModal()" title="Thêm kỷ niệm mới">
+    <i class="fa-solid fa-plus"></i>
+  </button>
 
   <div class="container">
     <!-- TAB 1: ALBUM KỶ NIỆM BÉ KEM -->
