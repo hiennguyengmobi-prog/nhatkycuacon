@@ -1305,7 +1305,7 @@
       }
 
       document.getElementById('loading').classList.add('active');
-      document.getElementById('loading-msg').innerText = "Đang đồng bộ lên Firebase & Google Photos...";
+      document.getElementById('loading-msg').innerText = "Đang đồng bộ lên Firebase...";
 
       const type = document.getElementById('album-type-input').value;
       const date = document.getElementById('album-date-input').value;
@@ -1320,23 +1320,30 @@
       };
 
       try {
-        // 1. Lưu vào Firebase Firestore
+        // 1. Lưu vào Firebase Firestore trước (Cực kỳ nhanh và ổn định)
         if (editingId) {
           await db.collection("albums").doc(editingId).set(albumData, { merge: true });
         } else {
           await db.collection("albums").add(albumData);
         }
 
-        // 2. Tự động đồng bộ các file ảnh gốc sang Google Photos (nếu đã kết nối)
+        // 2. Tắt ngay bảng loading và đóng modal để trải nghiệm mượt mà
+        document.getElementById('loading').classList.remove('active');
+        closeModal();
+
+        // 3. Đẩy ảnh gốc lên Google Photos ngầm ở phía sau (không chặn giao diện)
         if (googleAccessToken && rawPhotoFiles.length > 0) {
-          await syncFilesToGooglePhotos(rawPhotoFiles);
+          console.log("Bắt đầu đồng bộ ngầm ảnh lên Google Photos...");
+          syncFilesToGooglePhotos(rawPhotoFiles).then(() => {
+            console.log("Đồng bộ Google Photos ngầm hoàn tất!");
+          }).catch(err => {
+            console.error("Lỗi đồng bộ ngầm Google Photos:", err);
+          });
         }
 
-        closeModal();
       } catch (err) {
         console.error("Lỗi Firestore:", err);
         alert("Có lỗi xảy ra trong quá trình lưu kỷ niệm: " + err.message);
-      } finally {
         document.getElementById('loading').classList.remove('active');
       }
     }
